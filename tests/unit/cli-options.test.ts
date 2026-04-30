@@ -36,4 +36,24 @@ describe('CLI options', () => {
     expect(option?.defaultValue).toBe(false);
     expect(option?.hidden).toBe(true);
   });
+
+  it('registers hidden --save-build-command option', () => {
+    const option = program.options.find(
+      (item) => item.long === '--save-build-command',
+    );
+
+    expect(option).toBeDefined();
+    expect(option?.defaultValue).toBe(true);
+    expect(option?.hidden).toBe(true);
+  });
+
+  it('registers hidden --version-scheme option', () => {
+    const option = program.options.find(
+      (item) => item.long === '--version-scheme',
+    );
+
+    expect(option).toBeDefined();
+    expect(option?.defaultValue).toBe('date');
+    expect(option?.hidden).toBe(true);
+  });
 });

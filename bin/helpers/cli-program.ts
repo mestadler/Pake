@@ -86,9 +86,30 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .addOption(
       new Option(
         '--app-version <string>',
-        'App version, the same as package.json version',
+        'App version (overrides version scheme when set)',
       )
         .default(DEFAULT.appVersion)
+        .hideHelp(),
+    )
+    .addOption(
+      new Option(
+        '--version-scheme <string>',
+        'Version scheme: date (YYYY.MM.patch) or manual',
+      )
+        .choices(['date', 'manual'])
+        .default(DEFAULT.versionScheme)
+        .hideHelp(),
+    )
+    .addOption(
+      new Option('--version-patch <number>', 'Patch value for date versioning')
+        .default(DEFAULT.versionPatch)
+        .argParser((value) => {
+          const parsed = Number.parseInt(value, 10);
+          if (!Number.isInteger(parsed) || parsed < 0) {
+            throw new Error('--version-patch must be a non-negative integer');
+          }
+          return parsed;
+        })
         .hideHelp(),
     )
     .addOption(
@@ -264,6 +285,19 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .addOption(
       new Option('--microphone', 'Request microphone permission on macOS')
         .default(DEFAULT.microphone)
+        .hideHelp(),
+    )
+    .addOption(
+      new Option(
+        '--save-build-command [path]',
+        'Save the exact CLI build command for reproducible rebuilds',
+      )
+        .default(DEFAULT.saveBuildCommand)
+        .argParser((value) => {
+          if (value === undefined) return true;
+          const trimmed = value.trim();
+          return trimmed.length > 0 ? trimmed : true;
+        })
         .hideHelp(),
     )
     .version(packageJson.version, '-v, --version')

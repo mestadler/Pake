@@ -38,6 +38,12 @@ export interface PakeCliOptions {
   // App version, the same as package.json version, default 1.0.0
   appVersion: string;
 
+  // Version strategy: date (YYYY.MM.patch) or manual
+  versionScheme: 'date' | 'manual';
+
+  // Patch component for date version strategy
+  versionPatch: number;
+
   // Force Mac to use dark mode, default false
   darkMode: boolean;
 
@@ -134,6 +140,9 @@ export interface PakeCliOptions {
 
   // Request microphone entitlement on macOS, default false
   microphone: boolean;
+
+  // Save reproducible build command artifact (boolean uses default path)
+  saveBuildCommand: boolean | string;
 }
 
 export interface PakeAppOptions extends PakeCliOptions {

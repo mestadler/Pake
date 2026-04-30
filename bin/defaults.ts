@@ -9,7 +9,9 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
   resizable: true,
   hideTitleBar: false,
   alwaysOnTop: false,
-  appVersion: '1.0.0',
+  appVersion: '',
+  versionScheme: 'date',
+  versionPatch: 1,
   darkMode: false,
   disabledWebShortcuts: false,
   activationShortcut: '',
@@ -53,6 +55,7 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
   install: false,
   camera: false,
   microphone: false,
+  saveBuildCommand: true,
 };
 
 // Just for cli development

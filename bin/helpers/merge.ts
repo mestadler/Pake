@@ -34,6 +34,31 @@ function asSupportedPlatform(platform: NodeJS.Platform): SupportedPlatform {
   return platform;
 }
 
+function getSourceLabel(url: string, useLocalFile: boolean): string {
+  if (useLocalFile) {
+    return `local content (${path.basename(url)})`;
+  }
+
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname || parsed.origin;
+  } catch {
+    return url;
+  }
+}
+
+function buildAppDescription(
+  appName: string,
+  url: string,
+  useLocalFile: boolean,
+): { shortDescription: string; longDescription: string } {
+  const sourceLabel = getSourceLabel(url, useLocalFile);
+  const shortDescription = `${appName} desktop app for ${sourceLabel} (built with Tauri/Pake and Rust).`;
+  const longDescription = `${appName} packages ${sourceLabel} as a lightweight desktop application, built with Tauri/Pake and Rust.`;
+
+  return { shortDescription, longDescription };
+}
+
 async function copyTemplateConfigs(): Promise<void> {
   const srcTauriDir = path.join(npmDirectory, 'src-tauri');
   await fsExtra.ensureDir(tauriConfigDirectory);
@@ -419,6 +444,9 @@ export async function mergeConfig(
   tauriConf.productName = name;
   tauriConf.identifier = identifier;
   tauriConf.version = appVersion;
+  const appDescription = buildAppDescription(name, url, useLocalFile);
+  tauriConf.bundle.shortDescription = appDescription.shortDescription;
+  tauriConf.bundle.longDescription = appDescription.longDescription;
 
   const linuxBinaryName = `pake-${generateLinuxPackageName(name)}`;
   tauriConf.mainBinaryName =

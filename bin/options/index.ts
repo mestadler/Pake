@@ -41,6 +41,22 @@ function isValidName(name: string, platform: NodeJS.Platform): boolean {
   return !!name && reg.test(name);
 }
 
+function resolveAppVersion(options: PakeCliOptions): string {
+  const appVersionProvided = process.argv.includes('--app-version');
+  if (appVersionProvided && options.appVersion) {
+    return options.appVersion;
+  }
+
+  if (options.versionScheme === 'date') {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    return `${year}.${month}.${options.versionPatch}`;
+  }
+
+  return options.appVersion || '1.0.0';
+}
+
 export default async function handleOptions(
   options: PakeCliOptions,
   url: string,
@@ -83,6 +99,7 @@ export default async function handleOptions(
     ...options,
     name: resolvedName,
     identifier: resolveIdentifier(url, options.name, options.identifier),
+    appVersion: resolveAppVersion(options),
   };
 
   const iconPath = await handleIcon(appOptions, url);
