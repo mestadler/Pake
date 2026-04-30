@@ -1,4 +1,15 @@
 <h4 align="right"><strong>English</strong> | <a href="README_CN.md">简体中文</a></h4>
+
+> Fork notice (development branch): this fork is an active development branch of Pake used to validate fixes and packaging improvements before upstream submission.
+>
+> Local docs in this fork:
+> - `README_LOCAL.md` (local install, workflow, options, reproducible build artifacts)
+> - `README_MOBILE.md` (Android APK-only `pake-mobile` workflow)
+>
+> Upstream project and canonical docs: https://github.com/tw93/Pake
+>
+> Contribution intent: validated patches from this fork are intended to be proposed upstream to the main Pake repository after discussion with maintainers.
+
 <p align="center">
     <img src=https://gw.alipayobjects.com/zos/k/fa/logo-modified.png width=138/>
 </p>
