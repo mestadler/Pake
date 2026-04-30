@@ -103,7 +103,7 @@ For full upstream options, see `docs/cli-usage.md` and upstream README.
 
 ## Local workflow recommendation
 
-- Build each app from its own folder under `/home/martin/Devops/pake/builds/`.
+- Build each app from its own folder under `~/projects/pake/builds/` (use your default base projects directory).
 - Keep one `.build.txt` per app and update it by rebuilding.
 - Rebuild sequentially when using one checkout (avoid parallel builds in same repo state).
 

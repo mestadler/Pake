@@ -1,8 +1,8 @@
 # AGENTS.md
 
 ## Scope
-- Work inside `Pake/` only; `/home/martin/Devops` is a multi-repo workspace.
-- Built app artifacts are kept outside this repo in `/home/martin/Devops/pake/builds/`.
+- Work inside the `Pake/` repository only; do not treat a parent workspace as a single project.
+- Built app artifacts are typically kept outside the repo in a sibling `builds/` directory.
 
 ## Toolchain (trust CI config)
 - Node `22`
@@ -37,5 +37,5 @@
 
 ## Local workflow hygiene
 - Keep reproducible build commands in `builds/*/*.build.txt` and rerun from those folders.
-- `AGENTS.md`, `CLAUDE.md`, and `*.deb` are gitignored in this repo; do not try to commit them.
+- `CLAUDE.md` and `*.deb` are gitignored in this repo.
 - See `README_LOCAL.md` for local/fork workflow details and examples.
