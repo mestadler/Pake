@@ -98,9 +98,7 @@ async function handleLocalFile(
 
 async function mergeLinuxConfig(
   options: PakeAppOptions,
-  name: string,
   tauriConf: PakeTauriConfig,
-  linuxBinaryName: string,
 ): Promise<void> {
   const linuxBundle = tauriConf.bundle.linux;
   if (!linuxBundle) {
@@ -109,43 +107,9 @@ async function mergeLinuxConfig(
     );
   }
   delete linuxBundle.deb.files;
-
-  const linuxName = generateLinuxPackageName(name);
-  const desktopFileName = `com.pake.${linuxName}.desktop`;
-  const iconName = `${linuxName}_512`;
-  const { title } = options;
-
-  const chineseName = title && /[\u4e00-\u9fa5]/.test(title) ? title : null;
-  const desktopContent = `[Desktop Entry]
-Version=1.0
-Type=Application
-Name=${name}
-${chineseName ? `Name[zh_CN]=${chineseName}` : ''}
-Comment=${name}
-Exec=${linuxBinaryName}
-Icon=${iconName}
-Categories=Network;WebBrowser;Utility;
-MimeType=text/html;text/xml;application/xhtml_xml;
-StartupNotify=true
-Terminal=false
-`;
-
-  const srcAssetsDir = path.join(npmDirectory, 'src-tauri/assets');
-  const srcDesktopFilePath = path.join(srcAssetsDir, desktopFileName);
-  await fsExtra.ensureDir(srcAssetsDir);
-  await fsExtra.writeFile(srcDesktopFilePath, desktopContent);
-
-  const desktopInstallPath = `/usr/share/applications/${desktopFileName}`;
-  linuxBundle.deb.files = {
-    [desktopInstallPath]: `assets/${desktopFileName}`,
-  };
-
-  if (!linuxBundle.rpm) {
-    linuxBundle.rpm = {};
+  if (linuxBundle.rpm) {
+    delete linuxBundle.rpm.files;
   }
-  linuxBundle.rpm.files = {
-    [desktopInstallPath]: `assets/${desktopFileName}`,
-  };
 
   const validTargets = [
     'deb',
@@ -487,7 +451,7 @@ export async function mergeConfig(
   tauriConf.pake.system_tray[currentPlatform] = showSystemTray;
 
   if (platform === 'linux') {
-    await mergeLinuxConfig(options, name, tauriConf, linuxBinaryName);
+    await mergeLinuxConfig(options, tauriConf);
   }
 
   if (platform === 'darwin') {

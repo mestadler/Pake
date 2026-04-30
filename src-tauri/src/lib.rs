@@ -24,11 +24,19 @@ use util::get_pake_config;
 pub fn run_app() {
     #[cfg(target_os = "linux")]
     {
-        if std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER").is_err() {
-            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
-        }
-        if std::env::var("WEBKIT_DISABLE_COMPOSITING_MODE").is_err() {
-            std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+        // Keep Linux WebKit safeguards opt-in so Wayland users can retain compositor acceleration.
+        // Set PAKE_LINUX_WEBKIT_SAFE_MODE=1 to restore the conservative defaults.
+        let safe_mode = std::env::var("PAKE_LINUX_WEBKIT_SAFE_MODE")
+            .map(|value| value == "1")
+            .unwrap_or(false);
+
+        if safe_mode {
+            if std::env::var("WEBKIT_DISABLE_DMABUF_RENDERER").is_err() {
+                std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+            }
+            if std::env::var("WEBKIT_DISABLE_COMPOSITING_MODE").is_err() {
+                std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+            }
         }
     }
 
@@ -47,8 +55,16 @@ pub fn run_app() {
         .with_state_flags(if init_fullscreen {
             StateFlags::FULLSCREEN
         } else {
-            // Prevent flickering on the first open.
-            StateFlags::all() & !StateFlags::VISIBLE
+            #[cfg(target_os = "linux")]
+            {
+                // Keep VISIBLE state on Linux/Wayland to avoid non-interactive window decorations.
+                StateFlags::all()
+            }
+            #[cfg(not(target_os = "linux"))]
+            {
+                // Prevent flickering on the first open.
+                StateFlags::all() & !StateFlags::VISIBLE
+            }
         })
         .build();
 
