@@ -1,14 +1,42 @@
 <h4 align="right"><strong>English</strong> | <a href="README_CN.md">简体中文</a></h4>
 
-> Fork notice (development branch): this fork is an active development branch of Pake used to validate fixes and packaging improvements before upstream submission.
+## English
+
+---
+
+> **Fork Notice (Development Branch)**
 >
-> Local docs in this fork:
-> - `README_LOCAL.md` (local install, workflow, options, reproducible build artifacts)
-> - `README_MOBILE.md` (Android APK-only `pake-mobile` workflow)
+> This is an active development fork of [Pake](https://github.com/tw93/Pake). If you are looking for Pake, please use the upstream project — this fork exists solely to validate fixes and packaging improvements before proposing them upstream.
+
+**Local documentation in this fork:**
+
+- `README_LOCAL.md` — local install, workflow, options, and reproducible build artifacts
+- `README_MOBILE.md` — Android APK-only `pake-mobile` workflow
+
+**Upstream project and canonical documentation:** https://github.com/tw93/Pake
+
+**Contribution intent:** Validated patches from this fork are intended to be proposed to the main Pake repository after discussion with the maintainers.
+
+---
+
+## 繁體中文
+
+---
+
+> **分支說明（開發分支）**
 >
-> Upstream project and canonical docs: https://github.com/tw93/Pake
->
-> Contribution intent: validated patches from this fork are intended to be proposed upstream to the main Pake repository after discussion with maintainers.
+> 本儲存庫為 [Pake](https://github.com/tw93/Pake) 的開發用分支。若您正在尋找 Pake，請直接使用上游專案——本分支僅用於在提交上游前驗證修正與封裝改進。
+
+**本分支的本地文件：**
+
+- `README_LOCAL.md` — 本地安裝、工作流程、選項及可重現的建置產出物
+- `README_MOBILE.md` — 僅限 Android APK 的 `pake-mobile` 工作流程
+
+**上游專案與正式文件：** https://github.com/tw93/Pake
+
+**貢獻說明：** 本分支中經驗證的修補程式，將在與維護者討論後提交至 Pake 主儲存庫。
+
+---
 
 <p align="center">
     <img src=https://gw.alipayobjects.com/zos/k/fa/logo-modified.png width=138/>
