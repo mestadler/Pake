@@ -120,3 +120,4 @@ sudo apt install /tmp/myapp.deb
 
 - Upstream README remains the primary product documentation.
 - This file is intentionally local/fork-focused and should stay concise.
+- Mobile APK-only workflow is documented in `README_MOBILE.md`.

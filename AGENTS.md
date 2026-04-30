@@ -15,6 +15,7 @@
 - `pnpm test` (CI path; already runs `cli:build` first)
 - `npx vitest run tests/unit/<file>.test.ts` (focused unit run)
 - `node dist/cli.js <url-or-html> --name <Name> [options]` (local packaging)
+- `pake-mobile <url-or-html> --name <Name> --targets apk|apk-arm64-v8a` (Android APK packaging)
 
 ## Where things start
 - CLI entry: `bin/cli.ts`
