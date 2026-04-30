@@ -26,7 +26,6 @@
 # Logs
 .claude/
 AGENT.md
-AGENTS.md
 CLAUDE.md
 dist
 dist-ssr
