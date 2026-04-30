@@ -1,5 +1,6 @@
 import log from 'loglevel';
 import updateNotifier from 'update-notifier';
+import path from 'path';
 import packageJson from '../package.json';
 import BuilderProvider from './builders/BuilderProvider';
 import handleInputOptions from './options/index';
@@ -7,6 +8,12 @@ import { getCliProgram } from './helpers/cli-program';
 import { PakeCliOptions } from './types';
 
 const program = getCliProgram();
+const invokedAs = path.basename(process.argv[1] || 'pake');
+const isMobileCli = invokedAs.includes('pake-mobile');
+
+if (isMobileCli) {
+  process.env.PAKE_MOBILE_CLI = '1';
+}
 
 async function checkUpdateTips() {
   updateNotifier({ pkg: packageJson, updateCheckInterval: 1000 * 60 }).notify({
@@ -32,7 +39,9 @@ program.action(async (url: string, options: PakeCliOptions) => {
 
   const appOptions = await handleInputOptions(options, url);
 
-  const builder = BuilderProvider.create(appOptions);
+  const builder = isMobileCli
+    ? BuilderProvider.createMobile(appOptions)
+    : BuilderProvider.create(appOptions);
   await builder.prepare();
   await builder.build(url);
 });

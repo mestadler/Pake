@@ -12,6 +12,9 @@ import {
 import { generateLinuxPackageName } from '@/utils/name';
 import { PakeAppOptions, PakeCliOptions } from '@/types';
 
+const MOBILE_TARGET_GENERIC = 'apk';
+const MOBILE_TARGET_ARM64 = 'apk-arm64-v8a';
+
 function resolveAppName(name: string, platform: NodeJS.Platform): string {
   const domain = getDomain(name) || 'pake';
   return platform !== 'linux' ? capitalizeFirstLetter(domain) : domain;
@@ -57,10 +60,50 @@ function resolveAppVersion(options: PakeCliOptions): string {
   return options.appVersion || '1.0.0';
 }
 
+function resolveMobileTarget(targets: string): string {
+  const normalized = (targets || '').trim().toLowerCase();
+  if (
+    normalized.length === 0 ||
+    normalized === 'deb,appimage' ||
+    normalized === MOBILE_TARGET_GENERIC
+  ) {
+    return MOBILE_TARGET_GENERIC;
+  }
+
+  if (normalized === MOBILE_TARGET_ARM64 || normalized === 'arm64-v8a') {
+    return MOBILE_TARGET_ARM64;
+  }
+
+  throw new Error(
+    `pake-mobile supports only '${MOBILE_TARGET_GENERIC}' and '${MOBILE_TARGET_ARM64}' targets.`,
+  );
+}
+
+function warnUnsupportedMobileOptions(options: PakeCliOptions): void {
+  const warnings: string[] = [];
+
+  if (options.showSystemTray) warnings.push('--show-system-tray');
+  if (options.startToTray) warnings.push('--start-to-tray');
+  if (options.multiWindow) warnings.push('--multi-window');
+  if (options.multiInstance) warnings.push('--multi-instance');
+  if (options.hideTitleBar) warnings.push('--hide-title-bar');
+  if (options.activationShortcut) warnings.push('--activation-shortcut');
+  if (options.keepBinary) warnings.push('--keep-binary');
+  if (options.hideOnClose !== undefined) warnings.push('--hide-on-close');
+  if (options.install) warnings.push('--install');
+
+  if (warnings.length > 0) {
+    logger.warn(
+      `✼ pake-mobile ignores desktop-only options on Android: ${warnings.join(', ')}`,
+    );
+  }
+}
+
 export default async function handleOptions(
   options: PakeCliOptions,
   url: string,
 ): Promise<PakeAppOptions> {
+  const isMobileCli = process.env.PAKE_MOBILE_CLI === '1';
   const { platform } = process;
   const isActions = process.env.GITHUB_ACTIONS;
   let name = options.name;
@@ -100,7 +143,12 @@ export default async function handleOptions(
     name: resolvedName,
     identifier: resolveIdentifier(url, options.name, options.identifier),
     appVersion: resolveAppVersion(options),
+    targets: isMobileCli ? resolveMobileTarget(options.targets) : options.targets,
   };
+
+  if (isMobileCli) {
+    warnUnsupportedMobileOptions(appOptions);
+  }
 
   const iconPath = await handleIcon(appOptions, url);
   appOptions.icon = iconPath || '';

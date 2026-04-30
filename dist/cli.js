@@ -30,7 +30,8 @@ var engines = {
 };
 var packageManager = "pnpm@10.26.2";
 var bin = {
-	pake: "./dist/cli.js"
+	pake: "./dist/cli.js",
+	"pake-mobile": "./dist/cli.js"
 };
 var repository = {
 	type: "git",
@@ -1476,6 +1477,91 @@ class LinuxBuilder extends BaseBuilder {
     }
 }
 
+const ANDROID_TARGET_GENERIC = 'apk';
+const ANDROID_TARGET_ARM64 = 'apk-arm64-v8a';
+class AndroidBuilder extends BaseBuilder {
+    constructor(options) {
+        super(options);
+        const requestedTarget = (options.targets || '').trim();
+        if (requestedTarget === ANDROID_TARGET_ARM64) {
+            this.abi = 'arm64-v8a';
+            this.buildTarget = ANDROID_TARGET_ARM64;
+        }
+        else {
+            this.abi = 'universal';
+            this.buildTarget = ANDROID_TARGET_GENERIC;
+        }
+        this.options.targets = this.buildTarget;
+    }
+    getFileName() {
+        const { name = 'pake-app' } = this.options;
+        const suffix = this.abi === 'arm64-v8a' ? 'arm64-v8a' : 'android';
+        return `${name}_${tauriConfig.version}_${suffix}`;
+    }
+    async build(url) {
+        await this.buildAndCopy(url, this.buildTarget);
+    }
+    getFileType(_target) {
+        return 'apk';
+    }
+    async buildAndCopy(url, target) {
+        const { name = 'pake-app' } = this.options;
+        await mergeConfig(url, this.options, tauriConfig);
+        const packageManager = await this.detectPackageManager();
+        const buildSpinner = getSpinner('Building Android app...');
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        buildSpinner.stop();
+        logger.warn('✸ Building Android APK...');
+        const configPath = path.join('src-tauri', '.pake', 'tauri.conf.json');
+        const argSeparator = packageManager === 'npm' ? ' --' : '';
+        const archArg = target === ANDROID_TARGET_ARM64 ? ' --target aarch64-linux-android' : '';
+        const debugArg = this.options.debug ? ' --debug --verbose' : '';
+        const command = `${packageManager} run tauri${argSeparator} android build --apk --config "${configPath}"${archArg}${debugArg}`;
+        await shellExec(command, 1800000);
+        const apkPath = await this.findBuiltApkPath(target);
+        const distPath = path.resolve(`${name}.${this.getFileType(target)}`);
+        await fsExtra.copy(apkPath, distPath);
+        logger.success('✔ Build success!');
+        logger.success('✔ App installer located in', distPath);
+        if (this.options.saveBuildCommand) {
+            await this.saveBuildCommandArtifact(name, this.getFileType(target), target);
+        }
+    }
+    async findBuiltApkPath(target) {
+        const outputsRoot = path.join(npmDirectory, 'src-tauri', 'gen', 'android', 'app', 'build', 'outputs', 'apk');
+        if (!(await fsExtra.pathExists(outputsRoot))) {
+            throw new Error(`Android APK output folder not found at ${outputsRoot}. Ensure Android prerequisites are installed and run 'pnpm run tauri android init' if needed.`);
+        }
+        const allApks = await this.collectApkFiles(outputsRoot);
+        const filtered = target === ANDROID_TARGET_ARM64
+            ? allApks.filter((item) => item.includes('arm64-v8a'))
+            : allApks;
+        if (filtered.length === 0) {
+            throw new Error(`No APK artifact found under ${outputsRoot} for target '${target}'.`);
+        }
+        const stats = await Promise.all(filtered.map(async (filePath) => ({
+            filePath,
+            mtime: (await fsExtra.stat(filePath)).mtimeMs,
+        })));
+        stats.sort((a, b) => b.mtime - a.mtime);
+        return stats[0].filePath;
+    }
+    async collectApkFiles(dirPath) {
+        const entries = await fsExtra.readdir(dirPath, { withFileTypes: true });
+        const files = [];
+        for (const entry of entries) {
+            const fullPath = path.join(dirPath, entry.name);
+            if (entry.isDirectory()) {
+                files.push(...(await this.collectApkFiles(fullPath)));
+            }
+            else if (entry.isFile() && entry.name.endsWith('.apk')) {
+                files.push(fullPath);
+            }
+        }
+        return files;
+    }
+}
+
 const { platform } = process;
 const buildersMap = {
     darwin: MacBuilder,
@@ -1489,6 +1575,9 @@ class BuilderProvider {
             throw new Error('The current system is not supported!');
         }
         return new Builder(options);
+    }
+    static createMobile(options) {
+        return new AndroidBuilder(options);
     }
 }
 
@@ -2216,6 +2305,8 @@ function normalizeUrl(urlToNormalize) {
     }
 }
 
+const MOBILE_TARGET_GENERIC = 'apk';
+const MOBILE_TARGET_ARM64 = 'apk-arm64-v8a';
 function resolveAppName(name, platform) {
     const domain = getDomain(name) || 'pake';
     return platform !== 'linux' ? capitalizeFirstLetter(domain) : domain;
@@ -2251,7 +2342,44 @@ function resolveAppVersion(options) {
     }
     return options.appVersion || '1.0.0';
 }
+function resolveMobileTarget(targets) {
+    const normalized = (targets || '').trim().toLowerCase();
+    if (normalized.length === 0 ||
+        normalized === 'deb,appimage' ||
+        normalized === MOBILE_TARGET_GENERIC) {
+        return MOBILE_TARGET_GENERIC;
+    }
+    if (normalized === MOBILE_TARGET_ARM64 || normalized === 'arm64-v8a') {
+        return MOBILE_TARGET_ARM64;
+    }
+    throw new Error(`pake-mobile supports only '${MOBILE_TARGET_GENERIC}' and '${MOBILE_TARGET_ARM64}' targets.`);
+}
+function warnUnsupportedMobileOptions(options) {
+    const warnings = [];
+    if (options.showSystemTray)
+        warnings.push('--show-system-tray');
+    if (options.startToTray)
+        warnings.push('--start-to-tray');
+    if (options.multiWindow)
+        warnings.push('--multi-window');
+    if (options.multiInstance)
+        warnings.push('--multi-instance');
+    if (options.hideTitleBar)
+        warnings.push('--hide-title-bar');
+    if (options.activationShortcut)
+        warnings.push('--activation-shortcut');
+    if (options.keepBinary)
+        warnings.push('--keep-binary');
+    if (options.hideOnClose !== undefined)
+        warnings.push('--hide-on-close');
+    if (options.install)
+        warnings.push('--install');
+    if (warnings.length > 0) {
+        logger.warn(`✼ pake-mobile ignores desktop-only options on Android: ${warnings.join(', ')}`);
+    }
+}
 async function handleOptions(options, url) {
+    const isMobileCli = process.env.PAKE_MOBILE_CLI === '1';
     const { platform } = process;
     const isActions = process.env.GITHUB_ACTIONS;
     let name = options.name;
@@ -2286,7 +2414,11 @@ async function handleOptions(options, url) {
         name: resolvedName,
         identifier: resolveIdentifier(url, options.name, options.identifier),
         appVersion: resolveAppVersion(options),
+        targets: isMobileCli ? resolveMobileTarget(options.targets) : options.targets,
     };
+    if (isMobileCli) {
+        warnUnsupportedMobileOptions(appOptions);
+    }
     const iconPath = await handleIcon(appOptions, url);
     appOptions.icon = iconPath || '';
     return appOptions;
@@ -2556,6 +2688,11 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
 }
 
 const program = getCliProgram();
+const invokedAs = path.basename(process.argv[1] || 'pake');
+const isMobileCli = invokedAs.includes('pake-mobile');
+if (isMobileCli) {
+    process.env.PAKE_MOBILE_CLI = '1';
+}
 async function checkUpdateTips() {
     updateNotifier({ pkg: packageJson, updateCheckInterval: 1000 * 60 }).notify({
         isGlobal: true,
@@ -2575,7 +2712,9 @@ program.action(async (url, options) => {
         log.setLevel('debug');
     }
     const appOptions = await handleOptions(options, url);
-    const builder = BuilderProvider.create(appOptions);
+    const builder = isMobileCli
+        ? BuilderProvider.createMobile(appOptions)
+        : BuilderProvider.create(appOptions);
     await builder.prepare();
     await builder.build(url);
 });

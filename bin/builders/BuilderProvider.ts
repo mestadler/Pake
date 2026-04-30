@@ -2,6 +2,7 @@ import BaseBuilder from './BaseBuilder';
 import MacBuilder from './MacBuilder';
 import WinBuilder from './WinBuilder';
 import LinuxBuilder from './LinuxBuilder';
+import AndroidBuilder from './AndroidBuilder';
 import { PakeAppOptions } from '@/types';
 
 const { platform } = process;
@@ -22,5 +23,9 @@ export default class BuilderProvider {
       throw new Error('The current system is not supported!');
     }
     return new Builder(options);
+  }
+
+  static createMobile(options: PakeAppOptions): BaseBuilder {
+    return new AndroidBuilder(options);
   }
 }

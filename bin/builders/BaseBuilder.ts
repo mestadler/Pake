@@ -54,7 +54,7 @@ export default abstract class BaseBuilder {
     return 900000;
   }
 
-  private async detectPackageManager(): Promise<string> {
+  protected async detectPackageManager(): Promise<string> {
     if (BaseBuilder.packageManagerCache) {
       return BaseBuilder.packageManagerCache;
     }
@@ -361,7 +361,7 @@ export default abstract class BaseBuilder {
     return path.resolve(`${name}.build.txt`);
   }
 
-  private async saveBuildCommandArtifact(
+  protected async saveBuildCommandArtifact(
     name: string,
     fileType: string,
     target: string,
