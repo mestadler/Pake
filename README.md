@@ -2,10 +2,8 @@
 
 ## English
 
----
+![Fork Notice](https://img.shields.io/badge/Fork%20Notice-Development%20Branch-red?style=flat-square)
 
-> **Fork Notice (Development Branch)**
->
 > This is an active development fork of [Pake](https://github.com/tw93/Pake). If you are looking for Pake, please use the upstream project — this fork exists solely to validate fixes and packaging improvements before proposing them upstream.
 
 **Local documentation in this fork:**
@@ -17,14 +15,10 @@
 
 **Contribution intent:** Validated patches from this fork are intended to be proposed to the main Pake repository after discussion with the maintainers.
 
----
-
 ## 繁體中文
 
----
+![分支說明](https://img.shields.io/badge/分支說明-開發分支-red?style=flat-square)
 
-> **分支說明（開發分支）**
->
 > 本儲存庫為 [Pake](https://github.com/tw93/Pake) 的開發用分支。若您正在尋找 Pake，請直接使用上游專案——本分支僅用於在提交上游前驗證修正與封裝改進。
 
 **本分支的本地文件：**
@@ -35,8 +29,6 @@
 **上游專案與正式文件：** https://github.com/tw93/Pake
 
 **貢獻說明：** 本分支中經驗證的修補程式，將在與維護者討論後提交至 Pake 主儲存庫。
-
----
 
 <p align="center">
     <img src=https://gw.alipayobjects.com/zos/k/fa/logo-modified.png width=138/>
