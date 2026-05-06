@@ -80,3 +80,25 @@ If APK output directories are missing, initialize Android support first:
 ```bash
 pnpm run tauri android init
 ```
+
+For non-interactive builds, ensure Android/JDK env vars are set in the shell:
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export ANDROID_HOME=<path-to-android-sdk>
+export ANDROID_SDK_ROOT=$ANDROID_HOME
+export PATH="$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools"
+```
+
+## Smoke-tested commands
+
+From an output folder of your choice:
+
+```bash
+pnpm --dir ~/projects/Pake exec pake-mobile "https://example.com" --name "example-mobile" --targets apk --debug
+pnpm --dir ~/projects/Pake exec pake-mobile "https://example.com" --name "example-mobile-arm64" --targets apk-arm64-v8a --debug
+```
+
+## arm64 artifact note
+
+Depending on the current Tauri Android output layout, `apk-arm64-v8a` may still produce a `universal` APK filename in `src-tauri/gen/android/...`. In that case this fork falls back to the newest generated APK and still writes the expected output filename (`<name>_<version>_arm64-v8a.apk`).

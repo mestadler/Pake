@@ -31,7 +31,7 @@ var engines = {
 var packageManager = "pnpm@10.26.2";
 var bin = {
 	pake: "./dist/cli.js",
-	"pake-mobile": "./dist/cli.js"
+	"pake-mobile": "./bin/cli-mobile.mjs"
 };
 var repository = {
 	type: "git",
@@ -724,6 +724,7 @@ async function writeAllConfigs(tauriConf, platform) {
     await fsExtra.outputJSON(configJsonPath, tauriConf2, { spaces: 4 });
 }
 async function mergeConfig(url, options, tauriConf) {
+    const isMobileCli = process.env.PAKE_MOBILE_CLI === '1';
     await copyTemplateConfigs();
     const { width, height, fullscreen, maximize, hideTitleBar, alwaysOnTop, appVersion, darkMode, disabledWebShortcuts, activationShortcut, userAgent, showSystemTray, useLocalFile, identifier, name = 'pake-app', resizable = true, installerLanguage, hideOnClose, incognito, title, wasm, enableDragDrop, startToTray, forceInternalNavigation, internalUrlRegex, zoom, minWidth, minHeight, ignoreCertificateErrors, newWindow, camera, microphone, } = options;
     const platform = asSupportedPlatform(process.platform);
@@ -783,7 +784,7 @@ async function mergeConfig(url, options, tauriConf) {
         tauriConf.pake.user_agent[currentPlatform] = userAgent;
     }
     tauriConf.pake.system_tray[currentPlatform] = showSystemTray;
-    if (platform === 'linux') {
+    if (platform === 'linux' && !isMobileCli) {
         await mergeLinuxConfig(options, tauriConf);
     }
     if (platform === 'darwin') {
@@ -1514,7 +1515,11 @@ class AndroidBuilder extends BaseBuilder {
         logger.warn('✸ Building Android APK...');
         const configPath = path.join('src-tauri', '.pake', 'tauri.conf.json');
         const argSeparator = packageManager === 'npm' ? ' --' : '';
-        const archArg = target === ANDROID_TARGET_ARM64 ? ' --target aarch64-linux-android' : '';
+        const androidGenDir = path.join(npmDirectory, 'src-tauri', 'gen', 'android');
+        await fsExtra.remove(androidGenDir);
+        const initCommand = `${packageManager} run tauri${argSeparator} android init --config "${configPath}"`;
+        await shellExec(initCommand, 900000);
+        const archArg = target === ANDROID_TARGET_ARM64 ? ' --target aarch64' : '';
         const debugArg = this.options.debug ? ' --debug --verbose' : '';
         const command = `${packageManager} run tauri${argSeparator} android build --apk --config "${configPath}"${archArg}${debugArg}`;
         await shellExec(command, 1800000);
@@ -1533,13 +1538,17 @@ class AndroidBuilder extends BaseBuilder {
             throw new Error(`Android APK output folder not found at ${outputsRoot}. Ensure Android prerequisites are installed and run 'pnpm run tauri android init' if needed.`);
         }
         const allApks = await this.collectApkFiles(outputsRoot);
-        const filtered = target === ANDROID_TARGET_ARM64
+        let candidates = target === ANDROID_TARGET_ARM64
             ? allApks.filter((item) => item.includes('arm64-v8a'))
             : allApks;
-        if (filtered.length === 0) {
+        if (candidates.length === 0 && target === ANDROID_TARGET_ARM64) {
+            logger.warn("No APK filename with 'arm64-v8a' found; falling back to newest generated APK output.");
+            candidates = allApks;
+        }
+        if (candidates.length === 0) {
             throw new Error(`No APK artifact found under ${outputsRoot} for target '${target}'.`);
         }
-        const stats = await Promise.all(filtered.map(async (filePath) => ({
+        const stats = await Promise.all(candidates.map(async (filePath) => ({
             filePath,
             mtime: (await fsExtra.stat(filePath)).mtimeMs,
         })));
@@ -2689,7 +2698,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
 
 const program = getCliProgram();
 const invokedAs = path.basename(process.argv[1] || 'pake');
-const isMobileCli = invokedAs.includes('pake-mobile');
+const isMobileCli = process.env.PAKE_MOBILE_CLI === '1' || invokedAs.includes('pake-mobile');
 if (isMobileCli) {
     process.env.PAKE_MOBILE_CLI = '1';
 }

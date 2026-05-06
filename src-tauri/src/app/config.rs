@@ -55,6 +55,8 @@ impl<T> PlatformSpecific<T> {
         let platform = &self.linux;
         #[cfg(target_os = "windows")]
         let platform = &self.windows;
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        let platform = &self.linux;
 
         platform
     }

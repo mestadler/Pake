@@ -374,6 +374,7 @@ export async function mergeConfig(
   options: PakeAppOptions,
   tauriConf: PakeTauriConfig,
 ) {
+  const isMobileCli = process.env.PAKE_MOBILE_CLI === '1';
   await copyTemplateConfigs();
 
   const {
@@ -478,7 +479,7 @@ export async function mergeConfig(
   }
   tauriConf.pake.system_tray[currentPlatform] = showSystemTray;
 
-  if (platform === 'linux') {
+  if (platform === 'linux' && !isMobileCli) {
     await mergeLinuxConfig(options, tauriConf);
   }
 

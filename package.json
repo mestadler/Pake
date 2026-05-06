@@ -8,7 +8,7 @@
   "packageManager": "pnpm@10.26.2",
   "bin": {
     "pake": "./dist/cli.js",
-    "pake-mobile": "./dist/cli.js"
+    "pake-mobile": "./bin/cli-mobile.mjs"
   },
   "repository": {
     "type": "git",

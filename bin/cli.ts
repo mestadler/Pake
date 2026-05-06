@@ -9,7 +9,8 @@ import { PakeCliOptions } from './types';
 
 const program = getCliProgram();
 const invokedAs = path.basename(process.argv[1] || 'pake');
-const isMobileCli = invokedAs.includes('pake-mobile');
+const isMobileCli =
+  process.env.PAKE_MOBILE_CLI === '1' || invokedAs.includes('pake-mobile');
 
 if (isMobileCli) {
   process.env.PAKE_MOBILE_CLI = '1';

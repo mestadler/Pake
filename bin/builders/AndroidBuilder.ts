@@ -57,8 +57,14 @@ export default class AndroidBuilder extends BaseBuilder {
 
     const configPath = path.join('src-tauri', '.pake', 'tauri.conf.json');
     const argSeparator = packageManager === 'npm' ? ' --' : '';
+
+    const androidGenDir = path.join(npmDirectory, 'src-tauri', 'gen', 'android');
+    await fsExtra.remove(androidGenDir);
+    const initCommand = `${packageManager} run tauri${argSeparator} android init --config "${configPath}"`;
+    await shellExec(initCommand, 900000);
+
     const archArg =
-      target === ANDROID_TARGET_ARM64 ? ' --target aarch64-linux-android' : '';
+      target === ANDROID_TARGET_ARM64 ? ' --target aarch64' : '';
     const debugArg = this.options.debug ? ' --debug --verbose' : '';
     const command = `${packageManager} run tauri${argSeparator} android build --apk --config "${configPath}"${archArg}${debugArg}`;
 
@@ -95,19 +101,26 @@ export default class AndroidBuilder extends BaseBuilder {
     }
 
     const allApks = await this.collectApkFiles(outputsRoot);
-    const filtered =
+    let candidates =
       target === ANDROID_TARGET_ARM64
         ? allApks.filter((item) => item.includes('arm64-v8a'))
         : allApks;
 
-    if (filtered.length === 0) {
+    if (candidates.length === 0 && target === ANDROID_TARGET_ARM64) {
+      logger.warn(
+        "No APK filename with 'arm64-v8a' found; falling back to newest generated APK output.",
+      );
+      candidates = allApks;
+    }
+
+    if (candidates.length === 0) {
       throw new Error(
         `No APK artifact found under ${outputsRoot} for target '${target}'.`,
       );
     }
 
     const stats = await Promise.all(
-      filtered.map(async (filePath) => ({
+      candidates.map(async (filePath) => ({
         filePath,
         mtime: (await fsExtra.stat(filePath)).mtimeMs,
       })),
