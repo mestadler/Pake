@@ -106,6 +106,7 @@ For full upstream options, see `docs/cli-usage.md` and upstream README.
 - Build each app from its own folder under `~/projects/pake/builds/` (use your default base projects directory).
 - Keep one `.build.txt` per app and update it by rebuilding.
 - Rebuild sequentially when using one checkout (avoid parallel builds in same repo state).
+- Local smoke-test artifacts (`example-mobile*.apk`, `example-mobile*.build.txt`, and `src-tauri/png/example-mobile*_512.png`) are ignored in git to keep repeated mobile testing clean.
 
 ## Install generated packages on host (Linux)
 

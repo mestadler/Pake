@@ -28,6 +28,7 @@
 - Linux packaging depends on WebKit/Tauri system libs; use `.github/actions/setup-env/action.yml` as source of truth.
 - Avoid parallel packaging runs in one checkout (`node dist/cli.js ...`); shared temp state in `src-tauri/.pake/` can collide.
 - Linux WebKit safe mode is opt-in in this branch: set `PAKE_LINUX_WEBKIT_SAFE_MODE=1` to force conservative WebKit flags.
+- For `pake-mobile --targets apk-arm64-v8a`, upstream Android output may still be named `universal`; this fork now falls back to the newest generated APK artifact.
 
 ## Defaults in this fork branch
 - Build command artifact saving is enabled by default (`--save-build-command [path]`).
@@ -38,4 +39,5 @@
 ## Local workflow hygiene
 - Keep reproducible build commands in `builds/*/*.build.txt` and rerun from those folders.
 - `CLAUDE.md` and `*.deb` are gitignored in this repo.
+- Local mobile smoke artifacts (`example-mobile*.apk`, `example-mobile*.build.txt`, `src-tauri/png/example-mobile*_512.png`) are gitignored.
 - See `README_LOCAL.md` for local/fork workflow details and examples.
